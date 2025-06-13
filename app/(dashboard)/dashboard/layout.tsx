@@ -4,7 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Users, Settings, Shield, Activity, Menu } from "lucide-react";
+import {
+  Users,
+  Settings,
+  Shield,
+  Activity,
+  Menu,
+  LayoutDashboard,
+  BookOpenCheck,
+  FileClock,
+  History,
+  Layers3,
+  FileText,
+} from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -15,29 +27,42 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
-    { href: "/dashboard", icon: Users, label: "Dashboard" },
+    {
+      href: "/dashboard",
+      icon: LayoutDashboard,
+      label: "Dashboard",
+    },
     {
       href: "/dashboard/practice",
-      icon: Settings,
+      icon: BookOpenCheck,
       label: "Practice Questions",
     },
     {
       href: "/dashboard/simulate",
-      icon: Settings,
+      icon: FileClock,
       label: "Simulate Exams",
     },
     {
       href: "/dashboard/history",
-      icon: Settings,
+      icon: History,
       label: "Exam History",
     },
     {
       href: "/dashboard/flashcards",
-      icon: Settings,
+      icon: Layers3,
       label: "Flashcards",
     },
-    { href: "/dashboard/general", icon: Settings, label: "General" },
+    {
+      href: "/dashboard/cheatsheet",
+      icon: FileText,
+      label: "Cheatsheets",
+    },
     { href: "/dashboard/activity", icon: Activity, label: "Activity" },
+    {
+      href: "/dashboard/general",
+      icon: Settings,
+      label: "Personal Information",
+    },
     { href: "/dashboard/security", icon: Shield, label: "Security" },
   ];
 
@@ -72,7 +97,7 @@ export default function DashboardLayout({
               <Link key={item.href} href={item.href} passHref>
                 <Button
                   variant={pathname === item.href ? "secondary" : "ghost"}
-                  className={`shadow-none my-1 w-full justify-start ${
+                  className={`cursor-pointer shadow-none my-1 w-full justify-start ${
                     pathname === item.href ? "bg-gray-100" : ""
                   }`}
                   onClick={() => setIsSidebarOpen(false)}

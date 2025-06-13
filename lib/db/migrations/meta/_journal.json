@@ -15,6 +15,13 @@
       "when": 1749413965592,
       "tag": "0001_neat_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749794857293,
+      "tag": "0002_known_cerebro",
+      "breakpoints": true
     }
   ]
 }

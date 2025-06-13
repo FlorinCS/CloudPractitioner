@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useEffect, useMemo } from "react";
+import { useState, use, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BadgeCheck, XCircle } from "lucide-react";
@@ -17,36 +17,34 @@ interface Question {
   difficulty: "easy" | "medium" | "hard";
 }
 
-function shuffleArray<T>(array: T[]): T[] {
-  return [...array].sort(() => Math.random() - 0.5);
-}
+const LOCAL_STORAGE_KEY = "practice-progress";
 
 export default function PracticeExam() {
-  const [categoryFilter, setCategoryFilter] = useState<string | "all">("all");
-  const [difficultyFilter, setDifficultyFilter] = useState<string | "all">(
+  const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<"all" | string>(
     "all"
   );
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSavedProgress, setHasSavedProgress] = useState(false);
   const { userPromise } = useUser();
   const user = use(userPromise);
 
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState<(number | null)[]>([]);
+  const [submitted, setSubmitted] = useState(false);
+
+  // Fetch questions
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await fetch("/api/getQuestions", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch questions");
-        }
-
+        const res = await fetch("/api/getQuestions");
+        if (!res.ok) throw new Error("Failed to fetch questions");
         const data: Question[] = await res.json();
         setQuestions(data);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -57,39 +55,68 @@ export default function PracticeExam() {
     }
   }, [user]);
 
-  const filteredQuestions = useMemo(
-    () =>
-      questions.filter(
-        (q) =>
-          (categoryFilter === "all" || q.category === categoryFilter) &&
-          (difficultyFilter === "all" || q.difficulty === difficultyFilter)
-      ),
-    [questions, categoryFilter, difficultyFilter]
-  );
-
-  const shuffled = useMemo(
-    () => shuffleArray(filteredQuestions),
-    [filteredQuestions]
-  );
-  const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>([]);
-  const [submitted, setSubmitted] = useState(false);
-
+  // 1. Set filtered questions when filters change
   useEffect(() => {
-    setAnswers(Array(shuffled.length).fill(null));
+    const filtered = questions.filter(
+      (q) =>
+        (categoryFilter === "all" || q.category === categoryFilter) &&
+        (difficultyFilter === "all" || q.difficulty === difficultyFilter)
+    );
+    setFilteredQuestions(filtered);
+  }, [questions, categoryFilter, difficultyFilter]);
+
+  // 2. Restore saved progress ONCE when questions are initially fetched
+  useEffect(() => {
+    if (questions.length === 0) return;
+
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as {
+          answers: (number | null)[];
+          current: number;
+          submitted: boolean;
+        };
+
+        // Apply only if saved progress matches the questions length
+        if (parsed.answers && parsed.answers.length === questions.length) {
+          setAnswers(parsed.answers);
+          setCurrent(parsed.current < questions.length ? parsed.current : 0);
+          setSubmitted(parsed.submitted);
+          setHasSavedProgress(true);
+          return;
+        }
+      } catch (e) {
+        console.error("Failed to parse saved progress:", e);
+      }
+    }
+
+    // Default initialization
+    setAnswers(Array(questions.length).fill(null));
     setCurrent(0);
     setSubmitted(false);
-  }, [shuffled]);
+    setHasSavedProgress(false);
+  }, [questions]);
 
-  if (loading) {
-    return <p>Loading questions...</p>;
-  }
+  // Save progress
+  useEffect(() => {
+    if (filteredQuestions.length > 0) {
+      const payload = {
+        answers,
+        current,
+        submitted,
+      };
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+    }
+  }, [answers, current, submitted, filteredQuestions]);
 
-  if (shuffled.length === 0) {
-    return <p>No questions available for the selected filters.</p>;
-  }
-
-  const currentQuestion = shuffled[current];
+  const handleReset = () => {
+    setAnswers(Array(filteredQuestions.length).fill(null));
+    setCurrent(0);
+    setSubmitted(false);
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    setHasSavedProgress(false);
+  };
 
   const handleSelect = (index: number) => {
     if (!submitted) {
@@ -103,7 +130,30 @@ export default function PracticeExam() {
     setSubmitted(true);
   };
 
-  const progress = ((current + 1) / shuffled.length) * 100;
+  const goToFirstUnanswered = () => {
+    const firstUnansweredIndex = answers.findIndex((a) => a === null);
+    if (firstUnansweredIndex !== -1) {
+      setCurrent(firstUnansweredIndex);
+    }
+  };
+
+  const goToNextUnanswered = () => {
+    for (let i = current + 1; i < answers.length; i++) {
+      if (answers[i] === null) {
+        setCurrent(i);
+        return;
+      }
+    }
+    for (let i = 0; i <= current; i++) {
+      if (answers[i] === null) {
+        setCurrent(i);
+        return;
+      }
+    }
+  };
+
+  const currentQuestion = filteredQuestions[current];
+  const progress = ((current + 1) / filteredQuestions.length) * 100;
 
   const uniqueCategories = [
     "all",
@@ -114,14 +164,17 @@ export default function PracticeExam() {
     ...Array.from(new Set(questions.map((q) => q.difficulty))),
   ];
 
+  if (loading) return <p>Loading questions...</p>;
+  if (filteredQuestions.length === 0)
+    return <p>No questions match the selected filters.</p>;
+
   return (
     <div className="max-w-3xl space-y-6">
       {!submitted ? (
         <>
-          {/* Filters */}
           <div className="flex flex-wrap gap-4 items-center">
             <select
-              className="border rounded-md p-2"
+              className="border p-2 rounded"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
@@ -133,7 +186,7 @@ export default function PracticeExam() {
             </select>
 
             <select
-              className="border rounded-md p-2"
+              className="border p-2 rounded"
               value={difficultyFilter}
               onChange={(e) => setDifficultyFilter(e.target.value)}
             >
@@ -143,25 +196,27 @@ export default function PracticeExam() {
                 </option>
               ))}
             </select>
+
+            <Button variant="destructive" onClick={handleReset}>
+              Start Over
+            </Button>
           </div>
 
-          {/* Question Card */}
           <motion.div
-            className="shadow-lg rounded-2xl border border-gray-200"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <Card>
               <CardContent className="p-6 space-y-6">
-                <div className="flex justify-between items-center text-sm text-muted-foreground">
+                <div className="flex justify-between text-sm text-muted-foreground">
                   <span>
-                    Question <strong>{current + 1}</strong> / {shuffled.length}
+                    Question {current + 1} / {filteredQuestions.length}
                   </span>
                   <span>{Math.round(progress)}% Complete</span>
                 </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-gray-200 rounded-full">
                   <div
-                    className="h-full bg-indigo-600 transition-all duration-300"
+                    className="h-full bg-indigo-600"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -169,11 +224,9 @@ export default function PracticeExam() {
                   <span className="mr-4">
                     Category: {currentQuestion.category}
                   </span>
-                  <span className="capitalize">
-                    Difficulty: {currentQuestion.difficulty}
-                  </span>
+                  <span>Difficulty: {currentQuestion.difficulty}</span>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-800">
+                <h2 className="text-xl font-semibold">
                   {currentQuestion.question}
                 </h2>
                 <div className="grid grid-cols-1 gap-3">
@@ -181,7 +234,7 @@ export default function PracticeExam() {
                     <motion.button
                       key={idx}
                       whileTap={{ scale: 0.97 }}
-                      className={`w-full px-4 py-3 border rounded-xl text-left transition-colors duration-200 font-medium ${
+                      className={`w-full px-4 py-3 border rounded-xl text-left font-medium transition-colors ${
                         answers[current] === idx
                           ? idx === currentQuestion.correctIndex
                             ? "bg-green-100 border-green-500 text-green-800"
@@ -202,14 +255,14 @@ export default function PracticeExam() {
                   >
                     Previous
                   </Button>
-                  {current < shuffled.length - 1 ? (
+                  {current < filteredQuestions.length - 1 ? (
                     <Button onClick={() => setCurrent((c) => c + 1)}>
                       Next
                     </Button>
                   ) : (
                     <Button
-                      onClick={handleSubmit}
                       className="bg-green-600 hover:bg-green-700"
+                      onClick={handleSubmit}
                     >
                       Submit Exam
                     </Button>
@@ -225,22 +278,20 @@ export default function PracticeExam() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          {shuffled.map((q, i) => (
+          {filteredQuestions.map((q, i) => (
             <Card
               key={q.id}
               className={`border-l-4 ${
                 answers[i] === q.correctIndex
                   ? "border-green-500"
                   : "border-red-500"
-              } shadow-sm`}
+              }`}
             >
               <CardContent className="p-5 space-y-3">
                 <div className="text-sm text-gray-400">
                   Category: {q.category} · Difficulty: {q.difficulty}
                 </div>
-                <p className="font-semibold text-lg text-gray-800">
-                  {q.question}
-                </p>
+                <p className="font-semibold text-lg">{q.question}</p>
                 <div className="space-y-1">
                   {q.options.map((opt, idx) => {
                     const isCorrect = idx === q.correctIndex;
@@ -248,7 +299,7 @@ export default function PracticeExam() {
                     return (
                       <div
                         key={idx}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded border ${
                           isCorrect
                             ? "bg-green-100 border-green-400 text-green-800"
                             : isSelected && !isCorrect
@@ -261,7 +312,7 @@ export default function PracticeExam() {
                         ) : isSelected && !isCorrect ? (
                           <XCircle size={16} />
                         ) : (
-                          <span className="w-4 h-4 inline-block" />
+                          <span className="w-4 h-4" />
                         )}
                         <span>{opt}</span>
                       </div>
