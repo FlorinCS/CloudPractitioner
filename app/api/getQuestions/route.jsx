@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
+import { getSession } from "@/lib/auth/session";
+import { db } from "@/lib/db/drizzle";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
-export const dynamic = "force-dynamic"; // Ensure dynamic fetching (disables caching)
+export const dynamic = "force-dynamic";
 
 export async function GET(request) {
-  const referer = request.headers.get("referer"); // Check the Referer header
-  const isDirectAccess = !referer; // If Referer is missing, it's likely from the URL bar
+  const referer = request.headers.get("referer");
+  const isDirectAccess = !referer;
 
+  // Optional referer protection
   // if (isDirectAccess) {
-  //   return NextResponse.json(
-  //     { error: "Direct access from URL bar is not allowed" },
-  //     { status: 403 }
-  //   );
+  //   return NextResponse.json({ error: "Direct access not allowed" }, { status: 403 });
   // }
 
   const client = new MongoClient(process.env.MONGODB_URI);
@@ -19,13 +21,29 @@ export async function GET(request) {
   try {
     await client.connect();
 
+    const session = await getSession();
+    if (!session?.user) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const userId = session.user.id;
+
+    const userResult = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    const userRole = userResult[0]?.role ?? "basic"; // default fallback if somehow not found
+
     const database = client.db("CPDB");
     const collection = database.collection("questions");
 
-    const allItems = await collection.find({}).toArray();
+    const items =
+      userRole === "basic"
+        ? await collection.find({}).limit(20).toArray()
+        : await collection.find({}).toArray();
 
-    // Create response with proper cache headers
-    return NextResponse.json(allItems, {
+    return NextResponse.json(items, {
       headers: {
         "Cache-Control":
           "no-store, no-cache, must-revalidate, proxy-revalidate",

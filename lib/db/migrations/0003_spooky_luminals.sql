@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "tries" integer DEFAULT 1 NOT NULL;

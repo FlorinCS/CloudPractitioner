@@ -26,11 +26,7 @@ interface ExamResult {
   answers: any[];
 }
 
-interface DashboardProps {
-  user: { id: string; name?: string; email?: string };
-}
-
-export default function UserDashboard({ user }: DashboardProps) {
+export default function UserDashboard({ user }) {
   const [examHistory, setExamHistory] = useState<ExamResult[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [practiceProgress, setPracticeProgress] = useState<number | null>(null);
@@ -146,16 +142,16 @@ export default function UserDashboard({ user }: DashboardProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/dashboard/practice">
-          <Button className="w-full">🧠 Practice</Button>
+          <Button className="w-full cursor-pointer">🧠 Practice</Button>
         </Link>
         <Link href="/dashboard/simulate">
-          <Button className="w-full">📝 Mock Exam</Button>
+          <Button className="w-full cursor-pointer">📝 Mock Exam</Button>
         </Link>
         <Link href="/dashboard/flashcards">
-          <Button className="w-full">💡 Flashcards</Button>
+          <Button className="w-full cursor-pointer">💡 Flashcards</Button>
         </Link>
         <Link href="/dashboard/cheatsheet">
-          <Button className="w-full">📚 Cheatsheets</Button>
+          <Button className="w-full cursor-pointer">📚 Cheatsheets</Button>
         </Link>
       </div>
 
