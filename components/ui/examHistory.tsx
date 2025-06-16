@@ -6,8 +6,8 @@ import { format, parseISO } from "date-fns";
 type Answer = {
   question: string;
   is_correct: boolean;
-  selected_index: number;
-  correct_index: number;
+  selected_indexes: number[]; // Updated to array
+  correctIndexes: number[]; // Updated to array
   options: string[];
 };
 
@@ -49,7 +49,6 @@ export default function ExamHistoryPage() {
     fetchResults();
   }, []);
 
-  // Unique filter options
   const uniqueScores = useMemo(
     () =>
       Array.from(new Set(results.map((r) => r.score))).sort((a, b) => b - a),
@@ -62,7 +61,6 @@ export default function ExamHistoryPage() {
     ).sort((a, b) => (a > b ? -1 : 1));
   }, [results]);
 
-  // Filtered and paginated data
   const filteredResults = useMemo(() => {
     return results.filter((r) => {
       const matchScore = scoreFilter === null || r.score === scoreFilter;
@@ -82,12 +80,10 @@ export default function ExamHistoryPage() {
   const toggleExpand = (id: number) =>
     setExpandedExamId((prev) => (prev === id ? null : id));
 
-  const resetPagination = () => setCurrentPage(1);
   useEffect(() => {
-    resetPagination();
+    setCurrentPage(1);
   }, [scoreFilter, dateFilter]);
 
-  // Sidebar stats
   const passedExams = useMemo(
     () =>
       results.filter((r) => (r.score / r.totalQuestions) * 100 >= 70).length,
@@ -102,12 +98,11 @@ export default function ExamHistoryPage() {
 
   return (
     <div className="flex flex-col lg:flex-row max-w-7xl mx-auto py-6 gap-10">
-      {/* Main Content */}
       <main className="flex-1">
         <h1 className="text-3xl font-bold mb-6 text-center lg:text-left">
           📘 Exam History
         </h1>
-        {/* Summary Section */}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="p-5 bg-white shadow rounded-xl border text-center">
             <p className="text-gray-500 text-sm mb-1">Total Exams</p>
@@ -129,7 +124,7 @@ export default function ExamHistoryPage() {
           </div>
         </div>
 
-        {/* Filter Controls */}
+        {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1 block">
@@ -150,7 +145,6 @@ export default function ExamHistoryPage() {
               ))}
             </select>
           </div>
-
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1 block">
               Filter by Date
@@ -169,6 +163,7 @@ export default function ExamHistoryPage() {
             </select>
           </div>
         </div>
+
         {loading && <p className="text-center text-gray-500">Loading...</p>}
         {error && <p className="text-center text-red-500">{error}</p>}
         {!loading && currentResults.length === 0 && (
@@ -183,7 +178,7 @@ export default function ExamHistoryPage() {
             return (
               <div
                 key={result.id}
-                className="bg-white border rounded-xl shadow-sm mb-6 transition"
+                className="bg-white border rounded-xl shadow-sm mb-6"
               >
                 <button
                   onClick={() => toggleExpand(result.id)}
@@ -242,8 +237,10 @@ export default function ExamHistoryPage() {
                         </div>
                         <ul className="mt-2 space-y-2">
                           {answer.options.map((option, i) => {
-                            const isSelected = i === answer.selected_index;
-                            const isCorrect = i === answer.correct_index;
+                            const isSelected =
+                              answer.selected_indexes.includes(i);
+                            const isCorrect =
+                              answer.correct_indexes.includes(i);
                             return (
                               <li
                                 key={i}

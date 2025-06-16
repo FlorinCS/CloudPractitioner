@@ -54,7 +54,8 @@ export default function UserDashboard({ user }) {
         const rawPractice = localStorage.getItem("practice-progress");
         const practiceData = rawPractice ? JSON.parse(rawPractice) : null;
         if (practiceData?.answers?.length) {
-          const answered = practiceData.answers.filter((a: any) => a !== null);
+          const answered = practiceData.answers.filter((a) => a.length > 0);
+          console.log(practiceData.answers);
           setPracticeProgress(
             Math.round((answered.length / practiceData.answers.length) * 100)
           );
@@ -102,8 +103,8 @@ export default function UserDashboard({ user }) {
   );
 
   const chartData = [
-    { category: "Last Mock", score: lastMockScore },
-    { category: "Avg. Mock", score: averageMockScore },
+    { category: "Last Exam", score: lastMockScore },
+    { category: "Avg. Exam", score: averageMockScore },
     { category: "Practice", score: practiceProgress ?? 0 },
     { category: "Flashcards", score: flashcardProgress ?? 0 },
   ];

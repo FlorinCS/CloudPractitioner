@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, use, useState } from "react";
+import { useUser } from "@/lib/auth";
 import clsx from "clsx";
 
 type Category = "General" | "Security" | "Billing" | "Support";
@@ -26,6 +27,8 @@ export default function Flashcards() {
   const [flipped, setFlipped] = useState(false);
   const [progress, setProgress] = useState<Record<number, Status>>({});
   const [randomCard, setRandomCard] = useState<Flashcard | null>(null);
+  const { userPromise } = useUser();
+  const user = use(userPromise);
 
   const currentCard = randomCard ?? filteredFlashcards[currentIndex];
 
@@ -110,7 +113,29 @@ export default function Flashcards() {
   };
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-10">
+    <div className="max-w-xl mx-auto px-4 py-2">
+      {/* Upgrade to Pro Section */}
+      {user?.role === "basic" && (
+        <>
+          <div className="bg-yellow-50 border border-yellow-300 p-4 rounded-lg shadow-sm pb-5 mb-5">
+            <h3 className="text-lg text-center font-semibold text-yellow-800">
+              All Features. One Price. Lifetime Access. ✨
+            </h3>
+            <p className="text-sm text-center text-yellow-700 mt-1">
+              Unlock unlimited access to all flashcards and advanced features
+              with a one-time payment.
+            </p>
+            <div className="text-center">
+              <a
+                href="/payment"
+                className="mx-auto inline-block mt-3 bg-yellow-600 hover:bg-yellow-700 text-white font-medium px-4 py-2 rounded-md"
+              >
+                Go Pro Now
+              </a>
+            </div>
+          </div>
+        </>
+      )}
       <h1 className="text-3xl font-bold text-center mb-6">🧠 Flashcards</h1>
 
       <div className="mb-4 text-sm text-center text-gray-600">

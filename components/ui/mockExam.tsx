@@ -5,43 +5,103 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/lib/auth";
+import * as Dialog from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
 
-// Define the question structure
+// Updated question type
 type Question = {
   _id: string;
   question: string;
   options: string[];
-  correctIndex: number;
+  correctIndexes: number[]; // array now
   explanation: string;
   category: string;
   difficulty: string;
 };
 
+function UpgradeModal({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+}) {
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
+        <Dialog.Content className="fixed z-50 top-1/2 left-1/2 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-xl shadow-lg space-y-4">
+          <div className="flex justify-between items-start">
+            <Dialog.Title className="text-xl font-semibold text-gray-900">
+              Upgrade to Pro ✨
+            </Dialog.Title>
+            <Dialog.Close asChild>
+              <button className="text-gray-500 hover:text-gray-700 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </Dialog.Close>
+          </div>
+
+          <div className="text-base text-gray-600 space-y-2">
+            <p>
+              Unlock full access to all questions, advanced features, and future
+              updates with a single one-time payment.
+            </p>
+            <p>
+              ✅ 500+ Practice Questions
+              <br />
+              ✅ Unlimited cloud practitioner exams
+              <br />
+              ✅ 200+ Flashcards
+              <br />
+              ✅ Full Cheatsheets Access
+              <br />✅ Premium support
+            </p>
+            <p className="text-lg font-bold text-yellow-700">
+              Only €4,99 — one-time payment
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <a
+              href="/payment"
+              className="block text-center bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-md font-medium"
+            >
+              Go Pro Now
+            </a>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
 export default function MockExam() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<
-    Record<number, number>
+    Record<number, number[]>
   >({});
   const [showResults, setShowResults] = useState(false);
-  const [totalQuestions, setTotalQuestions] = useState(5);
-  const [secondsLeft, setSecondsLeft] = useState(600);
+  const [totalQuestions, setTotalQuestions] = useState(2);
+  const [secondsLeft, setSecondsLeft] = useState(30);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [started, setStarted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [noTries, setNoTries] = useState(false);
   const { userPromise } = useUser();
   const user = use(userPromise);
 
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchQuestions = async (isExam = false) => {
       try {
         const res = await fetch("/api/getQuestions", {
-          method: "GET",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isExam }),
         });
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch questions");
-        }
+        if (!res.ok) throw new Error("Failed to fetch questions");
 
         const data: Question[] = await res.json();
         setQuestions(data);
@@ -53,7 +113,7 @@ export default function MockExam() {
     };
 
     if (user?.id) {
-      fetchQuestions();
+      fetchQuestions(true);
     }
   }, [user]);
 
@@ -63,19 +123,25 @@ export default function MockExam() {
     const payload = {
       user_id: user.id,
       score: getScore(),
-      total_questions: questions.length,
+      total_questions: 2,
       duration_seconds: 600 - secondsLeft,
-      answers: questions.map((q, i) => ({
-        question_id: q._id,
-        question: q.question,
-        options: q.options,
-        correct_index: q.correctIndex,
-        selected_index: selectedAnswers[i] ?? -1,
-        is_correct: selectedAnswers[i] === q.correctIndex,
-      })),
+      answers: questions.map((q, i) => {
+        const selected = selectedAnswers[i] || [];
+        const correct = q.correctIndexes;
+        const isCorrect =
+          selected.length === correct.length &&
+          selected.every((ans) => correct.includes(ans));
+        return {
+          question_id: q._id,
+          question: q.question,
+          options: q.options,
+          correct_indexes: correct,
+          selected_indexes: selected,
+          is_correct: isCorrect,
+        };
+      }),
     };
 
-    console.log(payload);
     const sendResults = async () => {
       try {
         const res = await fetch("/api/saveExams", {
@@ -84,11 +150,7 @@ export default function MockExam() {
           body: JSON.stringify(payload),
         });
 
-        if (!res.ok) {
-          throw new Error("Failed to save results");
-        }
-
-        console.log("✅ Exam results saved");
+        if (!res.ok) throw new Error("Failed to save results");
       } catch (error) {
         console.error("❌ Error saving results:", error);
       }
@@ -97,9 +159,30 @@ export default function MockExam() {
     sendResults();
   }, [showResults]);
 
-  const startExam = () => {
-    setStarted(false); // reset it first to trigger useEffect
+  const updateTries = async () => {
+    try {
+      const res = await fetch("/api/updateTries", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to reset tries");
+      const data = await res.json();
+      console.log("✅ Tries reset:", data);
+    } catch (error) {
+      console.error("❌ Error resetting tries:", error);
+    }
+  };
 
+  const startExam = async () => {
+    if (user?.role === "basic" && (user?.tries === 0 || noTries)) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    if (user?.role === "basic" && user?.tries === 1) {
+      setNoTries(true);
+      if (typeof user.tries !== "undefined") user.tries = 0;
+      await updateTries();
+    }
+
+    setStarted(false);
     const categories = [
       "Cloud Concepts",
       "Security and Compliance",
@@ -134,9 +217,8 @@ export default function MockExam() {
     setShowResults(false);
     setCurrentIndex(0);
     setSelectedAnswers({});
-    setSecondsLeft(10);
+    setSecondsLeft(600); // full 10 mins
 
-    // delay setting started = true to let the effect retrigger
     setTimeout(() => {
       setStarted(true);
     }, 0);
@@ -157,11 +239,21 @@ export default function MockExam() {
     return () => clearInterval(timer);
   }, [started]);
 
-  const handleSelect = (index: number) => {
-    setSelectedAnswers({
-      ...selectedAnswers,
-      [currentIndex]: index,
-    });
+  const toggleSelect = (optionIndex: number) => {
+    const current = selectedAnswers[currentIndex] || [];
+    const alreadySelected = current.includes(optionIndex);
+
+    if (alreadySelected) {
+      setSelectedAnswers({
+        ...selectedAnswers,
+        [currentIndex]: current.filter((i) => i !== optionIndex),
+      });
+    } else if (current.length < 2) {
+      setSelectedAnswers({
+        ...selectedAnswers,
+        [currentIndex]: [...current, optionIndex],
+      });
+    }
   };
 
   const handleNext = () => {
@@ -174,7 +266,12 @@ export default function MockExam() {
 
   const getScore = () => {
     return questions.reduce((score, q, i) => {
-      return selectedAnswers[i] === q.correctIndex ? score + 1 : score;
+      const selected = selectedAnswers[i] || [];
+      const correct = q.correctIndexes;
+      const isCorrect =
+        selected.length === correct.length &&
+        selected.every((ans) => correct.includes(ans));
+      return isCorrect ? score + 1 : score;
     }, 0);
   };
 
@@ -186,6 +283,8 @@ export default function MockExam() {
 
   return (
     <div className="max-w-3xl space-y-6">
+      <UpgradeModal open={showUpgradeModal} setOpen={setShowUpgradeModal} />
+
       {!started ? (
         <motion.div
           className="space-y-4 border rounded-xl p-6 shadow-lg bg-background"
@@ -194,45 +293,29 @@ export default function MockExam() {
           transition={{ duration: 0.4 }}
         >
           <h2 className="text-2xl font-bold">Start Mock Exam</h2>
-          <div className="flex-row gap-4 sm:flex-row items-center gap-4">
-            <p className="text-lg mb-6 text-gray-700">
-              AWS Certified Cloud Practitioner
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-800 text-sm pb-3">
-              <div>
-                <p className="font-semibold">Category</p>
-                <p>Foundational</p>
-              </div>
-              <div>
-                <p className="font-semibold">Exam Duration</p>
-                <p>90 minutes</p>
-              </div>
-              <div>
-                <p className="font-semibold">Exam Format</p>
-                <p>65 questions; either multiple choice or multiple response</p>
-              </div>
-              <div>
-                <p className="font-semibold">Cost</p>
-                <p>
-                  100 USD.{" "}
-                  <a
-                    href="https://aws.amazon.com/certification/policies/before-testing/"
-                    target="_blank"
-                    className="text-blue-600 underline"
-                  >
-                    Exam pricing
-                  </a>
-                </p>
-              </div>
+          <p className="text-lg text-gray-700">
+            AWS Certified Cloud Practitioner
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-800 text-sm pb-3">
+            <div>
+              <p className="font-semibold">Category</p>
+              <p>Foundational</p>
             </div>
-            <Button
-              className="cursor-pointer mt-4 px-6 py-2 mt-4 sm:mt-0 text-white bg-blue-600 hover:bg-blue-700"
-              onClick={startExam}
-            >
-              🚀 Start Exam
-            </Button>
+            <div>
+              <p className="font-semibold">Exam Duration</p>
+              <p>90 minutes</p>
+            </div>
+            <div>
+              <p className="font-semibold">Exam Format</p>
+              <p>65 questions; either multiple choice or multiple response</p>
+            </div>
           </div>
+          <Button
+            className="mt-4 px-6 py-2 text-white bg-blue-600 hover:bg-blue-700"
+            onClick={startExam}
+          >
+            🚀 Start Exam
+          </Button>
         </motion.div>
       ) : !showResults && questions.length > 0 ? (
         <>
@@ -259,25 +342,27 @@ export default function MockExam() {
                     {questions[currentIndex].question}
                   </h2>
                   <div className="grid grid-cols-1 gap-3">
-                    {questions[currentIndex].options.map((option, i) => (
-                      <Button
-                        key={i}
-                        variant={
-                          selectedAnswers[currentIndex] === i
-                            ? "default"
-                            : "outline"
-                        }
-                        onClick={() => handleSelect(i)}
-                        className="justify-start"
-                      >
-                        {option}
-                      </Button>
-                    ))}
+                    {questions[currentIndex].options.map((option, i) => {
+                      const selected = selectedAnswers[currentIndex] || [];
+                      const isSelected = selected.includes(i);
+                      return (
+                        <Button
+                          key={i}
+                          variant={isSelected ? "default" : "outline"}
+                          onClick={() => toggleSelect(i)}
+                          className="justify-start"
+                        >
+                          {option}
+                        </Button>
+                      );
+                    })}
                   </div>
                   <div className="flex justify-end">
                     <Button
                       onClick={handleNext}
-                      disabled={selectedAnswers[currentIndex] === undefined}
+                      disabled={
+                        (selectedAnswers[currentIndex] || []).length === 0
+                      }
                     >
                       {currentIndex === questions.length - 1
                         ? "Submit Exam"
@@ -296,8 +381,11 @@ export default function MockExam() {
             You scored {getScore()} / {questions.length}
           </p>
           {questions.map((q, idx) => {
-            const userIdx = selectedAnswers[idx];
-            const isCorrect = userIdx === q.correctIndex;
+            const selected = selectedAnswers[idx] || [];
+            const isCorrect =
+              selected.length === q.correctIndexes.length &&
+              selected.every((s) => q.correctIndexes.includes(s));
+
             return (
               <Card
                 key={q._id}
@@ -310,10 +398,16 @@ export default function MockExam() {
                     Q{idx + 1}: {q.question}
                   </p>
                   <p className="text-sm mt-2">
-                    Your answer: <strong>{q.options[userIdx] || "None"}</strong>
-                    {isCorrect
-                      ? " ✅"
-                      : ` ❌ (Correct: ${q.options[q.correctIndex]})`}
+                    Your answer:{" "}
+                    <strong>
+                      {selected.length > 0
+                        ? selected.map((i) => q.options[i]).join(", ")
+                        : "None"}
+                    </strong>
+                    {!isCorrect &&
+                      ` ❌ (Correct: ${q.correctIndexes
+                        .map((i) => q.options[i])
+                        .join(", ")})`}
                   </p>
                   <p className="text-muted-foreground text-sm mt-1 italic">
                     {q.explanation}

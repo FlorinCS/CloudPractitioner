@@ -11,7 +11,7 @@ interface Question {
   id: string;
   question: string;
   options: string[];
-  correctIndex: number;
+  correctIndexes: number[]; // 1 or 2 correct answers
   explanation: string;
   category: string;
   difficulty: "easy" | "medium" | "hard";
@@ -27,133 +27,12 @@ export default function PracticeExam() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasSavedProgress, setHasSavedProgress] = useState(false);
   const { userPromise } = useUser();
   const user = use(userPromise);
 
   const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>([]);
+  const [answers, setAnswers] = useState<number[][]>([]);
   const [submitted, setSubmitted] = useState(false);
-
-  // Fetch questions
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const res = await fetch("/api/getQuestions");
-        if (!res.ok) throw new Error("Failed to fetch questions");
-        const data: Question[] = await res.json();
-        setQuestions(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.id) {
-      fetchQuestions();
-    }
-  }, [user]);
-
-  // 1. Set filtered questions when filters change
-  useEffect(() => {
-    const filtered = questions.filter(
-      (q) =>
-        (categoryFilter === "all" || q.category === categoryFilter) &&
-        (difficultyFilter === "all" || q.difficulty === difficultyFilter)
-    );
-    setFilteredQuestions(filtered);
-  }, [questions, categoryFilter, difficultyFilter]);
-
-  // 2. Restore saved progress ONCE when questions are initially fetched
-  useEffect(() => {
-    if (questions.length === 0) return;
-
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as {
-          answers: (number | null)[];
-          current: number;
-          submitted: boolean;
-        };
-
-        // Apply only if saved progress matches the questions length
-        if (parsed.answers && parsed.answers.length === questions.length) {
-          setAnswers(parsed.answers);
-          setCurrent(parsed.current < questions.length ? parsed.current : 0);
-          setSubmitted(parsed.submitted);
-          setHasSavedProgress(true);
-          return;
-        }
-      } catch (e) {
-        console.error("Failed to parse saved progress:", e);
-      }
-    }
-
-    // Default initialization
-    setAnswers(Array(questions.length).fill(null));
-    setCurrent(0);
-    setSubmitted(false);
-    setHasSavedProgress(false);
-  }, [questions]);
-
-  // Save progress
-  useEffect(() => {
-    if (filteredQuestions.length > 0) {
-      const payload = {
-        answers,
-        current,
-        submitted,
-      };
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
-    }
-  }, [answers, current, submitted, filteredQuestions]);
-
-  const handleReset = () => {
-    setAnswers(Array(filteredQuestions.length).fill(null));
-    setCurrent(0);
-    setSubmitted(false);
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    setHasSavedProgress(false);
-  };
-
-  const handleSelect = (index: number) => {
-    if (!submitted) {
-      const newAnswers = [...answers];
-      newAnswers[current] = index;
-      setAnswers(newAnswers);
-    }
-  };
-
-  const handleSubmit = () => {
-    setSubmitted(true);
-  };
-
-  const goToFirstUnanswered = () => {
-    const firstUnansweredIndex = answers.findIndex((a) => a === null);
-    if (firstUnansweredIndex !== -1) {
-      setCurrent(firstUnansweredIndex);
-    }
-  };
-
-  const goToNextUnanswered = () => {
-    for (let i = current + 1; i < answers.length; i++) {
-      if (answers[i] === null) {
-        setCurrent(i);
-        return;
-      }
-    }
-    for (let i = 0; i <= current; i++) {
-      if (answers[i] === null) {
-        setCurrent(i);
-        return;
-      }
-    }
-  };
-
-  const currentQuestion = filteredQuestions[current];
-  const progress = ((current + 1) / filteredQuestions.length) * 100;
 
   const uniqueCategories = [
     "all",
@@ -164,9 +43,165 @@ export default function PracticeExam() {
     ...Array.from(new Set(questions.map((q) => q.difficulty))),
   ];
 
+  // Fetch questions
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const res = await fetch("/api/getQuestions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isExam: false }),
+        });
+        if (!res.ok) throw new Error("Failed to fetch questions");
+        const data: Question[] = await res.json();
+        setQuestions(data);
+
+        // Try to restore filter state before filtering
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.categoryFilter) setCategoryFilter(parsed.categoryFilter);
+          if (parsed.difficultyFilter)
+            setDifficultyFilter(parsed.difficultyFilter);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user?.id) fetchQuestions();
+  }, [user?.id]);
+
+  // Apply filters
+  useEffect(() => {
+    const filtered = questions.filter(
+      (q) =>
+        (categoryFilter === "all" || q.category === categoryFilter) &&
+        (difficultyFilter === "all" || q.difficulty === difficultyFilter)
+    );
+    setFilteredQuestions(filtered);
+  }, [questions, categoryFilter, difficultyFilter]);
+
+  // Restore progress from localStorage after questions filtered
+  useEffect(() => {
+    if (filteredQuestions.length === 0) return;
+
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as {
+          answers: number[][];
+          current: number;
+          submitted: boolean;
+        };
+        if (
+          parsed.answers &&
+          parsed.answers.length === filteredQuestions.length
+        ) {
+          setAnswers(parsed.answers);
+          setCurrent(
+            parsed.current < filteredQuestions.length ? parsed.current : 0
+          );
+          setSubmitted(parsed.submitted);
+          return;
+        }
+      } catch (e) {
+        console.error("Failed to parse saved progress:", e);
+      }
+    }
+    setAnswers(filteredQuestions.map(() => []));
+    setCurrent(0);
+    setSubmitted(false);
+  }, [filteredQuestions]);
+
+  // Save progress
+  useEffect(() => {
+    if (filteredQuestions.length === 0) return;
+    const payload = {
+      answers,
+      current,
+      submitted,
+      categoryFilter,
+      difficultyFilter,
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+  }, [
+    answers,
+    current,
+    submitted,
+    categoryFilter,
+    difficultyFilter,
+    filteredQuestions,
+  ]);
+
+  const handleSelect = (index: number) => {
+    if (submitted) return;
+
+    const correctCount = filteredQuestions[current].correctIndexes.length;
+    setAnswers((prev) => {
+      const newAnswers = [...prev];
+      const currentSelected = newAnswers[current] || [];
+
+      if (currentSelected.includes(index)) {
+        newAnswers[current] = currentSelected.filter((i) => i !== index);
+      } else {
+        if (currentSelected.length < correctCount) {
+          newAnswers[current] = [...currentSelected, index];
+        } else {
+          newAnswers[current] = [...currentSelected.slice(1), index];
+        }
+      }
+      return newAnswers;
+    });
+  };
+
+  const handleReset = () => {
+    setAnswers(filteredQuestions.map(() => []));
+    setCurrent(0);
+    setSubmitted(false);
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+  };
+
+  const goPrev = () => setCurrent((c) => Math.max(0, c - 1));
+  const goNext = () =>
+    setCurrent((c) => Math.min(filteredQuestions.length - 1, c + 1));
+
+  const currentQuestion = filteredQuestions[current];
+  const progress = ((current + 1) / filteredQuestions.length) * 100;
+
   if (loading) return <p>Loading questions...</p>;
   if (filteredQuestions.length === 0)
-    return <p>No questions match the selected filters.</p>;
+    return (
+      <div>
+        <div className="flex flex-wrap gap-4 items-center">
+          <select
+            className="border p-2 rounded"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            {uniqueCategories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat === "all" ? "All Categories" : cat}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="border p-2 rounded"
+            value={difficultyFilter}
+            onChange={(e) => setDifficultyFilter(e.target.value)}
+          >
+            {uniqueDifficulties.map((dif) => (
+              <option key={dif} value={dif}>
+                {dif === "all" ? "All Difficulties" : dif}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p>No questions match the selected filters.</p>
+      </div>
+    );
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -230,41 +265,43 @@ export default function PracticeExam() {
                   {currentQuestion.question}
                 </h2>
                 <div className="grid grid-cols-1 gap-3">
-                  {currentQuestion.options.map((opt, idx) => (
-                    <motion.button
-                      key={idx}
-                      whileTap={{ scale: 0.97 }}
-                      className={`w-full px-4 py-3 border rounded-xl text-left font-medium transition-colors ${
-                        answers[current] === idx
-                          ? idx === currentQuestion.correctIndex
-                            ? "bg-green-100 border-green-500 text-green-800"
-                            : "bg-red-100 border-red-500 text-red-800"
-                          : "hover:bg-gray-50 border-gray-300"
-                      }`}
-                      onClick={() => handleSelect(idx)}
-                    >
-                      {opt}
-                    </motion.button>
-                  ))}
+                  {currentQuestion.options.map((opt, idx) => {
+                    const isSelected = answers[current]?.includes(idx) ?? false;
+                    const isCorrect =
+                      currentQuestion.correctIndexes.includes(idx);
+                    const btnClass = isSelected
+                      ? isCorrect
+                        ? "bg-green-100 border-green-500 text-green-800"
+                        : "bg-red-100 border-red-500 text-red-800"
+                      : "hover:bg-gray-50 border border-gray-300";
+
+                    return (
+                      <motion.button
+                        key={idx}
+                        whileTap={{ scale: 0.97 }}
+                        className={`w-full px-4 py-3 rounded-xl text-left font-medium transition-colors ${btnClass}`}
+                        onClick={() => handleSelect(idx)}
+                        type="button"
+                        disabled={submitted}
+                      >
+                        {opt}
+                      </motion.button>
+                    );
+                  })}
                 </div>
                 <div className="flex justify-between pt-6">
                   <Button
                     variant="secondary"
-                    onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+                    onClick={goPrev}
                     disabled={current === 0}
                   >
                     Previous
                   </Button>
                   {current < filteredQuestions.length - 1 ? (
-                    <Button onClick={() => setCurrent((c) => c + 1)}>
-                      Next
-                    </Button>
+                    <Button onClick={goNext}>Next</Button>
                   ) : (
-                    <Button
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={handleSubmit}
-                    >
-                      Submit Exam
+                    <Button variant="destructive" onClick={handleReset}>
+                      Start Over
                     </Button>
                   )}
                 </div>
@@ -282,7 +319,8 @@ export default function PracticeExam() {
             <Card
               key={q.id}
               className={`border-l-4 ${
-                answers[i] === q.correctIndex
+                answers[i].length === q.correctIndexes.length &&
+                answers[i].every((ans) => q.correctIndexes.includes(ans))
                   ? "border-green-500"
                   : "border-red-500"
               }`}
@@ -294,8 +332,9 @@ export default function PracticeExam() {
                 <p className="font-semibold text-lg">{q.question}</p>
                 <div className="space-y-1">
                   {q.options.map((opt, idx) => {
-                    const isCorrect = idx === q.correctIndex;
-                    const isSelected = idx === answers[i];
+                    const isCorrect = q.correctIndexes.includes(idx);
+                    const isSelected = answers[i]?.includes(idx);
+
                     return (
                       <div
                         key={idx}
@@ -323,6 +362,9 @@ export default function PracticeExam() {
               </CardContent>
             </Card>
           ))}
+          <Button onClick={handleReset} className="mt-4" variant="destructive">
+            Restart Practice
+          </Button>
         </motion.div>
       )}
     </div>

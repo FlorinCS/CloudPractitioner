@@ -7,19 +7,12 @@ import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request) {
-  const referer = request.headers.get("referer");
-  const isDirectAccess = !referer;
-
-  // Optional referer protection
-  // if (isDirectAccess) {
-  //   return NextResponse.json({ error: "Direct access not allowed" }, { status: 403 });
-  // }
-
+export async function POST(request) {
   const client = new MongoClient(process.env.MONGODB_URI);
 
   try {
-    await client.connect();
+    const body = await request.json();
+    const isExam = body.isExam ?? false;
 
     const session = await getSession();
     if (!session?.user) {
@@ -33,15 +26,17 @@ export async function GET(request) {
       .from(users)
       .where(eq(users.id, userId));
 
-    const userRole = userResult[0]?.role ?? "basic"; // default fallback if somehow not found
+    const userRole = userResult[0]?.role ?? "basic";
 
+    await client.connect();
     const database = client.db("CPDB");
     const collection = database.collection("questions");
 
-    const items =
-      userRole === "basic"
-        ? await collection.find({}).limit(20).toArray()
-        : await collection.find({}).toArray();
+    let limit = 20; // default for practice
+    if (isExam && userRole === "basic") limit = 2;
+    if (isExam && userRole !== "basic") limit = 2; // unlimited
+
+    const items = await collection.find({}).limit(limit).toArray();
 
     return NextResponse.json(items, {
       headers: {
