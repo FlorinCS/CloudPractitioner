@@ -32,11 +32,22 @@ export async function POST(request) {
     const database = client.db("CPDB");
     const collection = database.collection("questions");
 
-    let limit = 20; // default for practice
-    if (isExam && userRole === "basic") limit = 2;
-    if (isExam && userRole !== "basic") limit = 2; // unlimited
+    let limit = 500; // default for practice
+    if (isExam && userRole === "basic") limit = 65;
+    if (isExam && userRole !== "basic") limit = 5;
+    if (!isExam && userRole === "basic") limit = 20; // unlimited
 
-    const items = await collection.find({}).limit(limit).toArray();
+    let items;
+
+    if (isExam) {
+      // Random questions for exams
+      items = await collection
+        .aggregate([{ $sample: { size: limit } }])
+        .toArray();
+    } else {
+      // Ordered questions for practice (by _id ascending, or use `createdAt` if preferred)
+      items = await collection.find().sort({ _id: 1 }).limit(limit).toArray();
+    }
 
     return NextResponse.json(items, {
       headers: {

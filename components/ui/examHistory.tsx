@@ -155,11 +155,14 @@ export default function ExamHistoryPage() {
               onChange={(e) => setDateFilter(e.target.value || null)}
             >
               <option value="">All</option>
-              {uniqueDates.map((date) => (
-                <option key={date} value={date}>
-                  {format(parseISO(date), "dd MMM yyyy")}
-                </option>
-              ))}
+              {uniqueDates
+                .slice()
+                .reverse()
+                .map((date) => (
+                  <option key={date} value={date}>
+                    {format(parseISO(date), "dd MMM yyyy")}
+                  </option>
+                ))}
             </select>
           </div>
         </div>

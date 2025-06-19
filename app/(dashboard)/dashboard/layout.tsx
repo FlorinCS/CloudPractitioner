@@ -16,6 +16,7 @@ import {
   History,
   Layers3,
   FileText,
+  Contact2,
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -64,6 +65,7 @@ export default function DashboardLayout({
       label: "Personal Information",
     },
     { href: "/dashboard/security", icon: Shield, label: "Security" },
+    { href: "/dashboard/contact", icon: Contact2, label: "Contact" },
   ];
 
   return (

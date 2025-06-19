@@ -55,7 +55,7 @@ export default function UserDashboard({ user }) {
         const practiceData = rawPractice ? JSON.parse(rawPractice) : null;
         if (practiceData?.answers?.length) {
           const answered = practiceData.answers.filter((a) => a.length > 0);
-          console.log(practiceData.answers);
+
           setPracticeProgress(
             Math.round((answered.length / practiceData.answers.length) * 100)
           );

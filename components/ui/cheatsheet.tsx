@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, use, useState } from "react";
 import { useUser } from "@/lib/auth";
 
 type Category = "General" | "Security" | "Billing" | "Support";
@@ -65,7 +65,8 @@ const keywordExplanations: Keyword[] = [
 export default function Cheatsheet() {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [search, setSearch] = useState("");
-  const { user } = useUser();
+  const { userPromise } = useUser();
+  const user = use(userPromise);
   const userRole = user?.role ?? "basic";
 
   useEffect(() => {

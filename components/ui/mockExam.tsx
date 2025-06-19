@@ -82,8 +82,8 @@ export default function MockExam() {
     Record<number, number[]>
   >({});
   const [showResults, setShowResults] = useState(false);
-  const [totalQuestions, setTotalQuestions] = useState(2);
-  const [secondsLeft, setSecondsLeft] = useState(30);
+  const [totalQuestions, setTotalQuestions] = useState(65);
+  const [secondsLeft, setSecondsLeft] = useState(5400);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [started, setStarted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -123,8 +123,8 @@ export default function MockExam() {
     const payload = {
       user_id: user.id,
       score: getScore(),
-      total_questions: 2,
-      duration_seconds: 600 - secondsLeft,
+      total_questions: 65,
+      duration_seconds: 5400 - secondsLeft,
       answers: questions.map((q, i) => {
         const selected = selectedAnswers[i] || [];
         const correct = q.correctIndexes;
@@ -164,7 +164,6 @@ export default function MockExam() {
       const res = await fetch("/api/updateTries", { method: "POST" });
       if (!res.ok) throw new Error("Failed to reset tries");
       const data = await res.json();
-      console.log("✅ Tries reset:", data);
     } catch (error) {
       console.error("❌ Error resetting tries:", error);
     }
@@ -217,7 +216,7 @@ export default function MockExam() {
     setShowResults(false);
     setCurrentIndex(0);
     setSelectedAnswers({});
-    setSecondsLeft(600); // full 10 mins
+    setSecondsLeft(5400); // full 10 mins
 
     setTimeout(() => {
       setStarted(true);
