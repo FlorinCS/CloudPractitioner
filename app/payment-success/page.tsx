@@ -21,7 +21,7 @@ function PaymentSuccessContent() {
         </p>
 
         <div className="text-5xl font-bold text-purple-600 mb-6">
-          {amount ? `$${amount}` : "Payment Completed"}
+          Payment Completed
         </div>
 
         <Link
