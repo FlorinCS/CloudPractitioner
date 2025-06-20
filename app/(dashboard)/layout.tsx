@@ -78,7 +78,7 @@ function UserMenu() {
 
 function Header() {
   const pathname = usePathname();
-
+  const { data: user } = useSWR<User>("/api/user", fetcher);
   // Don't show header on the landing page (adjust as needed)
   const hiddenPaths = ["/"]; // You can also add "/landing", "/auth", etc.
 
@@ -88,7 +88,7 @@ function Header() {
   return (
     <header className="border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        <Link href="/" className="flex items-center">
+        <Link href={user ? "/dashboard" : "/"} className="flex items-center">
           <Image src={logo} alt="Logo" width={120} height={40} />
         </Link>
         <div className="flex items-center space-x-4">

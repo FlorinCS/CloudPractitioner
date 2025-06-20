@@ -34,7 +34,7 @@ export async function GET(request) {
     if (userRole === "pro") {
       items = await collection.find({}).toArray();
     } else {
-      items = await collection.find({}).limit(15).toArray();
+      items = await collection.find({}).limit(20).toArray();
     }
 
     return NextResponse.json(items, {

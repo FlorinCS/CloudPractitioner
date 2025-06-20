@@ -310,7 +310,7 @@ export default function MockExam() {
             </div>
           </div>
           <Button
-            className="mt-4 px-6 py-2 text-white bg-blue-600 hover:bg-blue-700"
+            className="cursor-pointer mt-4 px-6 py-2 text-white bg-blue-600 hover:bg-blue-700"
             onClick={startExam}
           >
             🚀 Start Exam

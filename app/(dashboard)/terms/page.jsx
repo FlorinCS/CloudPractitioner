@@ -95,7 +95,7 @@ export default function Terms() {
           <p className="mb-4">
             If you have any questions or concerns regarding these Terms and
             Conditions, please contact us at:{" "}
-            <strong>contact@cloudpractitioner.com</strong>
+            <strong>contact@cloud-practitioner.com</strong>
           </p>
         </div>
       </div>

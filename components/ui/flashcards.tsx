@@ -146,7 +146,7 @@ export default function Flashcards() {
 
       <div className="mb-6 flex justify-center gap-4 flex-wrap">
         <select
-          className="border border-gray-300 px-4 py-2 rounded-md shadow-sm"
+          className="cursor-pointer border border-gray-300 px-4 py-2 rounded-md shadow-sm"
           value={selectedCategory}
           onChange={(e) =>
             setSelectedCategory(e.target.value as Category | "All")
@@ -162,14 +162,27 @@ export default function Flashcards() {
 
         <button
           onClick={handleRandom}
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+          className="cursor-pointer bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
         >
           🎲 Random Card
         </button>
       </div>
 
       {filteredFlashcards.length === 0 ? (
-        <p className="text-center text-gray-500">No flashcards available.</p>
+        <p className="text-center text-gray-500">
+          {user?.role === "basic" ? (
+            "No flashcards available."
+          ) : (
+            <>
+              <a
+                href="/payment"
+                className="sm:inline bg-yellow-400 text-black font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition shadow"
+              >
+                🔓 Unlock all falshcards key terms with Pro (4,99$)
+              </a>
+            </>
+          )}
+        </p>
       ) : (
         <>
           <div
@@ -207,13 +220,13 @@ export default function Flashcards() {
           <div className="flex gap-3 justify-center mb-6">
             <button
               onClick={() => updateProgress("known")}
-              className="px-4 py-2 bg-green-100 text-green-800 rounded hover:bg-green-200"
+              className="cursor-pointer px-4 py-2 bg-green-100 text-green-800 rounded hover:bg-green-200"
             >
               ✅ Mark as Known
             </button>
             <button
               onClick={() => updateProgress("review")}
-              className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+              className="cursor-pointer px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
             >
               🔁 Review Later
             </button>
@@ -222,7 +235,7 @@ export default function Flashcards() {
           <div className="flex justify-between items-center">
             <button
               onClick={handlePrev}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+              className="cursor-pointer px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
             >
               ⬅️ Previous
             </button>
@@ -231,7 +244,7 @@ export default function Flashcards() {
             </span>
             <button
               onClick={handleNext}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+              className="cursor-pointer px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
             >
               Next ➡️
             </button>

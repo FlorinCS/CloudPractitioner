@@ -93,7 +93,7 @@ export default function PrivacyPolicy() {
           <h2 className="text-xl font-semibold mt-6 mb-2">8. Contact</h2>
           <p className="mb-4">
             If you have any questions or concerns about this policy, feel free
-            to contact us at: <strong>contact@cloudpractitioner.io</strong>
+            to contact us at: <strong>contact@cloud-practitioner.com</strong>
           </p>
         </div>
       </div>

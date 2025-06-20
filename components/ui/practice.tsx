@@ -209,7 +209,7 @@ export default function PracticeExam() {
         <>
           <div className="flex flex-wrap gap-4 items-center">
             <select
-              className="border p-2 rounded"
+              className="border p-2 rounded cursor-pointer"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
@@ -221,7 +221,7 @@ export default function PracticeExam() {
             </select>
 
             <select
-              className="border p-2 rounded"
+              className="border p-2 rounded cursor-pointer"
               value={difficultyFilter}
               onChange={(e) => setDifficultyFilter(e.target.value)}
             >
@@ -232,7 +232,11 @@ export default function PracticeExam() {
               ))}
             </select>
 
-            <Button variant="destructive" onClick={handleReset}>
+            <Button
+              variant="destructive"
+              className="cursor-pointer"
+              onClick={handleReset}
+            >
               Start Over
             </Button>
           </div>
@@ -279,7 +283,7 @@ export default function PracticeExam() {
                       <motion.button
                         key={idx}
                         whileTap={{ scale: 0.97 }}
-                        className={`w-full px-4 py-3 rounded-xl text-left font-medium transition-colors ${btnClass}`}
+                        className={`cursor-pointer w-full px-4 py-3 rounded-xl text-left font-medium transition-colors ${btnClass}`}
                         onClick={() => handleSelect(idx)}
                         type="button"
                         disabled={submitted}
@@ -291,6 +295,7 @@ export default function PracticeExam() {
                 </div>
                 <div className="flex justify-between pt-6">
                   <Button
+                    className="cursor-pointer"
                     variant="secondary"
                     onClick={goPrev}
                     disabled={current === 0}
@@ -298,9 +303,15 @@ export default function PracticeExam() {
                     Previous
                   </Button>
                   {current < filteredQuestions.length - 1 ? (
-                    <Button onClick={goNext}>Next</Button>
+                    <Button className="cursor-pointer" onClick={goNext}>
+                      Next
+                    </Button>
                   ) : (
-                    <Button variant="destructive" onClick={handleReset}>
+                    <Button
+                      className="cursor-pointer"
+                      variant="destructive"
+                      onClick={handleReset}
+                    >
                       Start Over
                     </Button>
                   )}
@@ -362,7 +373,11 @@ export default function PracticeExam() {
               </CardContent>
             </Card>
           ))}
-          <Button onClick={handleReset} className="mt-4" variant="destructive">
+          <Button
+            onClick={handleReset}
+            className="mt-4 cursor-pointer"
+            variant="destructive"
+          >
             Restart Practice
           </Button>
         </motion.div>

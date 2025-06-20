@@ -273,7 +273,7 @@ export default function Cheatsheet() {
           <div className="mt-4 text-center">
             <a
               href="/payment"
-              className="bg-yellow-400 text-black font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition shadow"
+              className="block sm:inline bg-yellow-400 text-black font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition shadow"
             >
               🔓 Unlock all {filteredKeywords.length} key terms with Pro (4,99$)
             </a>
@@ -311,9 +311,9 @@ export default function Cheatsheet() {
               <div className="mt-4 text-center">
                 <a
                   href="/payment"
-                  className="cursor-pointer bg-yellow-400 text-black font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition shadow"
+                  className="block sm:inline cursor-pointer bg-yellow-400 text-black font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition shadow"
                 >
-                  🔓 Unlock all {cards.length} flashcards with Pro (4,99$)
+                  🔓 Unlock rest of the flashcards with Pro (4,99$)
                 </a>
               </div>
             )}
