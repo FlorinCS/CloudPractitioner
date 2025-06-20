@@ -34,7 +34,7 @@ export async function POST(request) {
 
     let limit = 500; // default for practice
     if (isExam && userRole === "basic") limit = 65;
-    if (isExam && userRole !== "basic") limit = 5;
+    if (isExam && userRole !== "basic") limit = 65;
     if (!isExam && userRole === "basic") limit = 20; // unlimited
 
     let items;
