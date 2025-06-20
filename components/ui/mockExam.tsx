@@ -48,11 +48,11 @@ function UpgradeModal({
               updates with a single one-time payment.
             </p>
             <p>
-              ✅ 500+ Practice Questions
+              ✅ 350+ Practice Questions
               <br />
               ✅ Unlimited cloud practitioner exams
               <br />
-              ✅ 200+ Flashcards
+              ✅ 150+ Flashcards
               <br />
               ✅ Full Cheatsheets Access
               <br />✅ Premium support

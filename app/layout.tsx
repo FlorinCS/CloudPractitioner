@@ -6,8 +6,41 @@ import { UserProvider } from "@/lib/auth";
 import { SWRConfig } from "swr";
 
 export const metadata: Metadata = {
-  title: "Next.js SaaS Starter",
-  description: "Get started quickly with Next.js, Postgres, and Stripe.",
+  title: "Prepare for the AWS Cloud Practitioner Exam with CloudPractitioner",
+  description:
+    "Smart platform to generate practice exams, review flashcards, and track your progress for the AWS Certified Cloud Practitioner exam.",
+  keywords: [
+    "AWS Cloud Practitioner",
+    "cloud certification",
+    "AWS exam prep",
+    "practice tests",
+    "aws practice tests",
+    "AWS flashcards",
+    "Cloud Practitioner",
+    "AWS training platform",
+  ],
+  openGraph: {
+    title: "Master the AWS Cloud Practitioner Exam with CloudPractitioneer",
+    description:
+      "AI-powered platform for AWS Cloud Practitioner practice exams, flashcards, and performance tracking.",
+    url: "https://cloud-practitioner.com",
+    images: [
+      {
+        url: "/preview-cloudpractitioneer.jpg", // Ensure this image exists in the /public directory
+        width: 1200,
+        height: 630,
+        alt: "CloudPractitioneer – AWS Cloud Practitioner Prep",
+      },
+    ],
+  },
+  metadataBase: new URL("https://cloud-practitioner.com"),
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export const viewport: Viewport = {

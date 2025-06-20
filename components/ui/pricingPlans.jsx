@@ -26,9 +26,9 @@ const tiers = [
     description:
       "Lifetime access to all features to help you become an AWS Cloud Practitioner.",
     features: [
-      "500+ practice questions",
+      "350+ practice questions",
       "Unlimited practice exams",
-      "500+ AWS flashcards",
+      "150+ AWS flashcards",
       "Progress tracking",
       "Free lifetime updates",
     ],

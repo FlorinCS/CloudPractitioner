@@ -3,7 +3,7 @@
 import React, { useEffect, use, useState } from "react";
 import { useUser } from "@/lib/auth";
 
-type Category = "General" | "Security" | "Billing" | "Support";
+type Category = "General" | "Security" | "Services" | "Pricing";
 
 type Flashcard = {
   id: number;
@@ -20,8 +20,8 @@ type Keyword = {
 const categoryTitles: Record<Category, string> = {
   General: "📘 Cloud Concepts",
   Security: "🔐 Security & Compliance",
-  Billing: "💰 Billing & Pricing",
-  Support: "🧰 Support & Resources",
+  Services: "🧰 Services",
+  Pricing: "💰 Pricing",
 };
 
 const keywordExplanations: Keyword[] = [
@@ -60,6 +60,135 @@ const keywordExplanations: Keyword[] = [
     definition:
       "Automatically adjusts compute capacity to maintain performance and reduce cost.",
   },
+  {
+    term: "VPC",
+    definition:
+      "Virtual Private Cloud — a logically isolated section of the AWS cloud where you can launch AWS resources in a virtual network that you define.",
+  },
+  {
+    term: "Subnet",
+    definition:
+      "A range of IP addresses in your VPC. Subnets can be public or private.",
+  },
+  {
+    term: "Route Table",
+    definition:
+      "A set of rules, called routes, that are used to determine where network traffic is directed.",
+  },
+  {
+    term: "Security Group",
+    definition:
+      "A virtual firewall that controls the traffic allowed in and out of an EC2 instance.",
+  },
+  {
+    term: "EBS",
+    definition:
+      "Elastic Block Storage — provides block-level storage volumes for use with EC2 instances.",
+  },
+  {
+    term: "RDS",
+    definition:
+      "Relational Database Service — a managed database service for MySQL, PostgreSQL, Oracle, SQL Server, and MariaDB.",
+  },
+  {
+    term: "DynamoDB",
+    definition:
+      "A fully managed NoSQL database service that provides fast and predictable performance with seamless scalability.",
+  },
+  {
+    term: "Lambda",
+    definition:
+      "A serverless compute service that lets you run code without provisioning or managing servers.",
+  },
+  {
+    term: "API Gateway",
+    definition:
+      "A fully managed service that makes it easy for developers to create, publish, maintain, monitor, and secure APIs at any scale.",
+  },
+  {
+    term: "CloudWatch",
+    definition:
+      "A monitoring and observability service that provides data and actionable insights to monitor your applications, respond to system-wide performance changes, and optimize resource utilization.",
+  },
+  {
+    term: "CloudFormation",
+    definition:
+      "A service that helps you model and set up your AWS resources so you can spend less time managing those resources and more time focusing on your applications.",
+  },
+  {
+    term: "SQS",
+    definition:
+      "Simple Queue Service — a fully managed message queuing service that enables you to decouple and scale microservices, distributed systems, and serverless applications.",
+  },
+  {
+    term: "SNS",
+    definition:
+      "Simple Notification Service — a fully managed messaging service for decoupling microservices, distributed systems, and serverless applications.",
+  },
+  {
+    term: "ECS",
+    definition:
+      "Elastic Container Service — a fully managed container orchestration service that makes it easy to deploy, manage, and scale containerized applications.",
+  },
+  {
+    term: "EKS",
+    definition:
+      "Elastic Kubernetes Service — a managed Kubernetes service that makes it easy to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane.",
+  },
+  {
+    term: "ELB",
+    definition:
+      "Elastic Load Balancing — automatically distributes incoming application traffic across multiple targets, such as EC2 instances, containers, and IP addresses.",
+  },
+  {
+    term: "ALB",
+    definition:
+      "Application Load Balancer — A type of ELB that makes intelligent routing decisions at the application layer (HTTP/HTTPS).",
+  },
+  {
+    term: "NLB",
+    definition:
+      "Network Load Balancer — A type of ELB that is best suited for load balancing of Transmission Control Protocol (TCP), User Datagram Protocol (UDP) and Transport Layer Security (TLS) traffic where extreme performance is required.",
+  },
+  {
+    term: "ASG",
+    definition:
+      "Auto Scaling Group - A collection of EC2 instances that are treated as a logical unit for the purposes of automatic scaling and management.",
+  },
+  {
+    term: "IAM Role",
+    definition:
+      "An IAM entity that defines a set of permissions for making AWS service requests.",
+  },
+  {
+    term: "Key Pair",
+    definition:
+      "A set of security credentials that you use to prove your identity when connecting to an EC2 instance.",
+  },
+  {
+    term: "Instance",
+    definition: "A virtual server in the AWS cloud.",
+  },
+  {
+    term: "Instance Type",
+    definition:
+      "The configuration of the hardware for your virtual machine, including the CPU, memory, storage and networking capacity.",
+  },
+  {
+    term: "AMI",
+    definition:
+      "Amazon Machine Image — provides the information required to launch an instance, which is a virtual server in the cloud.",
+  },
+  {
+    term: "Serverless",
+    definition:
+      "A cloud computing execution model in which the cloud provider dynamically manages the allocation of machine resources. Services like AWS Lambda are serverless.",
+  },
+  {
+    term: "Container",
+    definition:
+      "A standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another. Docker is a popular containerization technology.",
+  },
 ];
 
 export default function Cheatsheet() {
@@ -93,8 +222,8 @@ export default function Cheatsheet() {
     {
       General: [],
       Security: [],
-      Billing: [],
-      Support: [],
+      Services: [],
+      Pricing: [],
     }
   );
 

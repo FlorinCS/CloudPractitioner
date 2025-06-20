@@ -7,7 +7,7 @@ type Answer = {
   question: string;
   is_correct: boolean;
   selected_indexes: number[]; // Updated to array
-  correctIndexes: number[]; // Updated to array
+  correct_indexes: number[]; // Updated to array
   options: string[];
 };
 
@@ -243,7 +243,7 @@ export default function ExamHistoryPage() {
                             const isSelected =
                               answer.selected_indexes.includes(i);
                             const isCorrect =
-                              answer.correct_indexes.includes(i);
+                              answer.correct_indexes?.includes(i);
                             return (
                               <li
                                 key={i}

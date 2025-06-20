@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, use, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useUser } from "@/lib/auth";
 import {
   ResponsiveContainer,
   BarChart,
@@ -26,7 +27,7 @@ interface ExamResult {
   answers: any[];
 }
 
-export default function UserDashboard({ user }) {
+export default function UserDashboard() {
   const [examHistory, setExamHistory] = useState<ExamResult[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [practiceProgress, setPracticeProgress] = useState<number | null>(null);
@@ -34,6 +35,8 @@ export default function UserDashboard({ user }) {
     null
   );
   const [answeredQuestions, setAnsweredQuestions] = useState(0);
+  const { userPromise } = useUser();
+  const user = use(userPromise);
 
   useEffect(() => {
     async function fetchHistory() {
@@ -54,7 +57,10 @@ export default function UserDashboard({ user }) {
         const rawPractice = localStorage.getItem("practice-progress");
         const practiceData = rawPractice ? JSON.parse(rawPractice) : null;
         if (practiceData?.answers?.length) {
-          const answered = practiceData.answers.filter((a) => a.length > 0);
+          console.log(practiceData.answers);
+          const answered = (practiceData.answers as unknown[]).filter(
+            (a): a is unknown[] => Array.isArray(a) && a.length > 0
+          );
 
           setPracticeProgress(
             Math.round((answered.length / practiceData.answers.length) * 100)
@@ -82,7 +88,8 @@ export default function UserDashboard({ user }) {
     loadLocalProgress();
   }, []);
 
-  const lastExam = examHistory.slice(-1)[0];
+  const lastExam = examHistory[examHistory.length - 1];
+
   const lastMockScore = lastExam
     ? Math.round((lastExam.score / lastExam.totalQuestions) * 100)
     : 0;

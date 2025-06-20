@@ -8,7 +8,7 @@ import logo from "@/assets/landingPage/Features2.png"; // Replace when image is 
 
 const features = [
   {
-    name: "500+ Practice Questions",
+    name: "350+ Practice Questions",
     description:
       "Practice with dynamic, contextually accurate questions powered by artificial intelligence.",
     icon: CpuChipIcon,
