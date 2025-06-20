@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
 
-const ALLOWED_ORIGIN = "https://bac-ai.ro"; // ✅ Change if needed
+const ALLOWED_ORIGIN = "https://cloud-practitioner.com"; // ✅ Change if needed
 
 // Function to handle OPTIONS preflight request
 export async function OPTIONS() {
