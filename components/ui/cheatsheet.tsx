@@ -275,7 +275,7 @@ export default function Cheatsheet() {
               href="/payment"
               className="block sm:inline bg-yellow-400 text-black font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition shadow"
             >
-              🔓 Unlock all {filteredKeywords.length} key terms with Pro (4,99$)
+              🔓 Unlock all {filteredKeywords.length} key terms with Pro (5$)
             </a>
           </div>
         )}
@@ -313,7 +313,7 @@ export default function Cheatsheet() {
                   href="/payment"
                   className="block sm:inline cursor-pointer bg-yellow-400 text-black font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition shadow"
                 >
-                  🔓 Unlock rest of the flashcards with Pro (4,99$)
+                  🔓 Unlock rest of the flashcards with Pro (5$)
                 </a>
               </div>
             )}

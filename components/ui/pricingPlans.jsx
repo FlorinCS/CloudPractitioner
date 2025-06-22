@@ -22,7 +22,7 @@ const tiers = [
     name: "Pro",
     id: "tier-pro",
     href: "/sign-up",
-    priceMonthly: "$4,99",
+    priceMonthly: "$5",
     description:
       "Lifetime access to all features to help you become an AWS Cloud Practitioner.",
     features: [

@@ -58,7 +58,7 @@ function UpgradeModal({
               <br />✅ Premium support
             </p>
             <p className="text-lg font-bold text-yellow-700">
-              Only €4,99 — one-time payment
+              Only €5 — one-time payment
             </p>
           </div>
 

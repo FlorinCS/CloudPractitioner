@@ -178,7 +178,7 @@ export default function Flashcards() {
                 href="/payment"
                 className="sm:inline bg-yellow-400 text-black font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition shadow"
               >
-                🔓 Unlock all falshcards key terms with Pro (4,99$)
+                🔓 Unlock all falshcards key terms with Pro (5$)
               </a>
             </>
           )}
