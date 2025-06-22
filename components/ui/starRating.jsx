@@ -55,7 +55,9 @@ export default function StarRating() {
     setLoading(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://bac-ai.ro";
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL ||
+        "https://www.cloud-practitioner.com";
       const response = await fetch(`${baseUrl}/api/saveDataRating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
