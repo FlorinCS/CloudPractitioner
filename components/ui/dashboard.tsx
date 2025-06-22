@@ -57,7 +57,6 @@ export default function UserDashboard() {
         const rawPractice = localStorage.getItem("practice-progress");
         const practiceData = rawPractice ? JSON.parse(rawPractice) : null;
         if (practiceData?.answers?.length) {
-          console.log(practiceData.answers);
           const answered = (practiceData.answers as unknown[]).filter(
             (a): a is unknown[] => Array.isArray(a) && a.length > 0
           );
